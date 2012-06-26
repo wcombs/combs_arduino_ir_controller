@@ -3,7 +3,6 @@
 // The main goal is to automate the powering on of all devices once AppleTV turns on,
 // so music can start streaming through airplay with no further intervention
 // this code is public domain, please enjoy!
-//
 
 
 int lgTvDiscreteOn[17*3] = {1, 8918, 4472,
@@ -14,16 +13,51 @@ int lgTvDiscreteOn[17*3] = {1, 8918, 4472,
 							1, 546, 572,
 							5, 546, 1690,
 							2, 546, 572,
-							2, 546, 1690,
-							2, 546, 572,
+							1, 546, 1690,
+							3, 546, 572,
 							4, 546, 1690,
-							2, 546, 572,
-							2, 546, 1690,
+							1, 546, 572,
+							3, 546, 1690,
 							2, 546, 572,
 							1, 546, 39260,
 							1, 8820, 2200,
 							1, 546, 28620};
 
+int lgTvDiscreteHDMI1[17*3] =  {1, 8918, 4472,
+								2, 546, 572,
+								1, 546, 1690,
+								5, 546, 572,
+								2, 546, 1690,
+								1, 546, 572,
+								5, 546, 1690,
+								1, 546, 572,
+								3, 546, 1690,
+								2, 546, 572,
+								3, 546, 1690,
+								3, 546, 572,
+								2, 546, 1690,
+								2, 546, 572,
+								1, 546, 39260,
+								1, 8820, 2200,
+								1, 546, 28620};
+
+int lgTvDiscreteHDMI2[17*3] =  {1, 8918, 4472,
+								2, 546, 572,
+								1, 546, 1690,
+								5, 546, 572,
+								2, 546, 1690,
+								1, 546, 572,
+								5, 546, 1690,
+								2, 546, 572,
+								2, 546, 1690,
+								2, 546, 572,
+								4, 546, 1690,
+								2, 546, 572,
+								2, 546, 1690,
+								2, 546, 572,
+								1, 546, 39260,
+								1, 8820, 2200,
+								1, 546, 28620};
 
 
 int IRledPin = 4;
@@ -51,10 +85,7 @@ void setup() {
 }
 
 void loop() {
-	//photocellReading = analogRead(photocellPin);
-	//sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
-	//delay(20000);
-/*
+	photocellReading = analogRead(photocellPin);
 	if (appletvState == 0) {
 		if (photocellReading > appletvOnThresh) {
 			mightBeOn++;
@@ -64,22 +95,10 @@ void loop() {
 		if (mightBeOn == numThreshChecksNeeded) {
 			mightBeOn = 0;
 			appletvState = 1;
-			SendLGTVCodeDiscreteOn();
+			sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
 			delay(100);
-			SendLGTVDiscreteHDMI2();
+			sendIRSignal(lgTvDiscreteHDMI1, sizeof(lgTvDiscreteHDMI1)/sizeof(int));
 			delay(100);
-			SendLGTVCodeDiscreteOn();
-			delay(100);
-			SendLGTVCodeDiscreteOn();
-			delay(8000);
-			SendLGTVDiscreteHDMI2();
-			delay(1000);
-			SendLGTVDiscreteHDMI2();
-			delay(1000);
-			SendLGTVDiscreteHDMI2();
-			delay(1000);
-			SendLGTVDiscreteHDMI2();
-			delay(500);
 		}
 	}
 	
@@ -92,41 +111,15 @@ void loop() {
 		if (mightBeOff == numThreshChecksNeeded) {
 			mightBeOff = 0;
 			appletvState = 0;
-			SendLGTVDiscreteHDMI1();
-	        delay(500);
-			SendLGTVDiscreteHDMI1();
-	        delay(1000);
-			SendLGTVDiscreteHDMI1();
+			sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
 	        delay(500);
 		}
 	}
 
 //	if (digitalRead(button1Pin)) {
-//		SendLGTVCodeDiscreteOn();
-//		SendLGTVDiscreteHDMI1();
-//		delay(1000);
-//		delay(6*1000);
-//		// send one more just in case it was already on
-//		SendLGTVCodeOn();
-//		delay(1000);
-//		sendHDMIon();
-//		delay(1000);
-//		SendHDMIsel2();
 //	}
 //	if (digitalRead(button2Pin)) {
-//		SendHDMIsel1();
-//		delay(1500);
 //	}
-        //if (digitalRead(button1Pin)) {
-        //    Serial.println("button1 pressed");
-        //    delay(1500);
-        //}
-        //if (digitalRead(button2Pin)) {
-        //    Serial.println("button2 pressed");
-        //    delay(1500);
-        //}
-	//delay(50);
-	*/
 }
 
 // This procedure sends a 38KHz pulse to the IRledPin 
@@ -160,239 +153,5 @@ void sendIRSignal(int *arr, int size) {
 			delayMicroseconds(arr[(i*3)+2]);
 		}
 	}
-	digitalWrite(statusLedPin, LOW);
-}
-
-void SendLGTVCodeDiscreteOn() {
-	digitalWrite(statusLedPin, HIGH);
-	pulseIR(8918);
-	delayMicroseconds(4472);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-
-// end stuff here
-	pulseIR(540);
-	delayMicroseconds(39260);
-	pulseIR(8820);
-	delayMicroseconds(2200);
-	pulseIR(540);
-	delayMicroseconds(28620);
-	//Serial.println("done lg power");
-	digitalWrite(statusLedPin, LOW);
-}
-
-void SendLGTVDiscreteHDMI1() {
-	digitalWrite(statusLedPin, HIGH);
-	pulseIR(8918);
-	delayMicroseconds(4472);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(540);
-	delayMicroseconds(39260);
-	pulseIR(8820);
-	delayMicroseconds(2200);
-	pulseIR(540);
-	delayMicroseconds(28620);
-	digitalWrite(statusLedPin, LOW);
-}
-
-void SendLGTVDiscreteHDMI2() {
-	digitalWrite(statusLedPin, HIGH);
-	pulseIR(8918);
-	delayMicroseconds(4472);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(1690);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(546);
-	delayMicroseconds(572);
-	pulseIR(540);
-	delayMicroseconds(39260);
-	pulseIR(8820);
-	delayMicroseconds(2200);
-	pulseIR(540);
-	delayMicroseconds(28620);
 	digitalWrite(statusLedPin, LOW);
 }
