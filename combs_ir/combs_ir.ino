@@ -59,11 +59,34 @@ int lgTvDiscreteHDMI2[17*3] =  {1, 8918, 4472,
                                 1, 8820, 2200,
                                 1, 546, 28620};
 
+int lgTvDiscreteOff[21*3] = {1, 8918, 4446,
+2, 572, 546,
+1, 572, 1638,
+5, 572, 546,
+2, 572, 1638,
+1, 572, 546,
+6, 572, 1638,
+1, 572, 546,
+1, 572, 1638,
+3, 572, 546,
+2, 572, 1638,
+1, 572, 546,
+1, 572, 1638,
+1, 572, 546,
+3, 572, 1638,
+2, 572, 546,
+1, 572, 39598,
+1, 8892, 2210,
+1, 2210, 572,
+1, 8892, 2210,
+1, 2210, 572};
+
 
 int IRledPin = 4;
 int statusLedPin = 12;
 int button1Pin = 8;
 int button2Pin = 13;
+int num_resends = 3;
 
 int photocellPin = 0;
 int photocellReading;     
@@ -74,7 +97,8 @@ int mightBeOff = 0;
 // set these to customize sensitivity
 int appletvOnThresh = 200;
 int appletvOffThresh = 10;
-int numThreshChecksNeeded = 5;
+int numOnThreshChecksNeeded = 100;
+int numOffThreshChecksNeeded = 1000;
 
 void setup() {                
     pinMode(IRledPin, OUTPUT);
@@ -85,6 +109,7 @@ void setup() {
 }
 
 void loop() {
+    
     photocellReading = analogRead(photocellPin);
     if (appletvState == 0) {
         if (photocellReading > appletvOnThresh) {
@@ -92,13 +117,34 @@ void loop() {
         } else if (mightBeOn > 0) {
             mightBeOn--;
         }
-        if (mightBeOn == numThreshChecksNeeded) {
+        if (mightBeOn == numOnThreshChecksNeeded) {
             mightBeOn = 0;
             appletvState = 1;
-            sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
-            delay(100);
-            sendIRSignal(lgTvDiscreteHDMI1, sizeof(lgTvDiscreteHDMI1)/sizeof(int));
-            delay(100);
+            
+            for(int i = 0; i < num_resends; i++) {
+	            sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
+	            delay(100);
+	            sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
+	            delay(100);
+	            sendHKDiscreteOn();
+	            delay(100);
+	            sendHKDiscreteVid1();
+	            delay(500);
+            }
+           
+            // wait for tv to turn on if it was off 
+            delay(10000);
+    
+            for(int i = 0; i < num_resends; i++) {
+	            sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
+	            delay(100);
+	            sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
+	            delay(100);
+	            sendHKDiscreteOn();
+	            delay(100);
+	            sendHKDiscreteVid1();
+	            delay(500);
+            }
         }
     }
     
@@ -108,18 +154,26 @@ void loop() {
         } else if (mightBeOff > 0) {
             mightBeOff--;
         }
-        if (mightBeOff == numThreshChecksNeeded) {
+        //Serial.println(photocellReading);
+        if (mightBeOff == numOffThreshChecksNeeded) {
             mightBeOff = 0;
             appletvState = 0;
-            sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
-            delay(500);
+            for(int i = 0; i < num_resends; i++) {
+                sendIRSignal(lgTvDiscreteHDMI1, sizeof(lgTvDiscreteHDMI1)/sizeof(int));
+                delay(100);
+            }
         }
     }
 
-//  if (digitalRead(button1Pin)) {
-//  }
-//  if (digitalRead(button2Pin)) {
-//  }
+  if (digitalRead(button2Pin)) {
+    for(int i = 0; i < num_resends; i++) {
+        sendIRSignal(lgTvDiscreteOff, sizeof(lgTvDiscreteOff)/sizeof(int));
+        delay(100);
+        sendHKDiscreteOff();
+        delay(200);
+    }
+  }
+    
 }
 
 // This procedure sends a 38KHz pulse to the IRledPin 
@@ -153,5 +207,472 @@ void sendIRSignal(int *arr, int size) {
             delayMicroseconds(arr[(i*3)+2]);
         }
     }
+    digitalWrite(statusLedPin, LOW);
+}
+
+void sendHKDiscreteOn() {
+    digitalWrite(statusLedPin, HIGH);
+	pulseIR(8820);
+	delayMicroseconds(4460);
+	pulseIR(520);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(500);
+	delayMicroseconds(1700);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1700);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(38940);
+	pulseIR(8840);
+	delayMicroseconds(2200);
+	pulseIR(520);
+	delayMicroseconds(28704);
+	pulseIR(8860);
+	delayMicroseconds(2200);
+	pulseIR(520);
+	delayMicroseconds(25116);
+	pulseIR(8860);
+	delayMicroseconds(4420);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(41160);
+	pulseIR(8820);
+	delayMicroseconds(2200);
+	pulseIR(520);
+	delayMicroseconds(28724);
+	pulseIR(8840);
+	delayMicroseconds(2200);
+    digitalWrite(statusLedPin, LOW);
+}
+
+void sendHKDiscreteOff() {
+    digitalWrite(statusLedPin, HIGH);
+	pulseIR(8860);
+	delayMicroseconds(4440);
+	pulseIR(520);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(560);
+	delayMicroseconds(1660);
+	pulseIR(520);
+	delayMicroseconds(560);
+	pulseIR(560);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(1640);
+	pulseIR(560);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(540);
+	pulseIR(560);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(38940);
+	pulseIR(8840);
+	delayMicroseconds(2180);
+	pulseIR(540);
+	delayMicroseconds(28724);
+	pulseIR(8840);
+	delayMicroseconds(2180);
+	pulseIR(560);
+	delayMicroseconds(25136);
+	pulseIR(8840);
+	delayMicroseconds(4400);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(560);
+	delayMicroseconds(540);
+	pulseIR(560);
+	delayMicroseconds(1640);
+	pulseIR(560);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(560);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(560);
+	delayMicroseconds(1640);
+	pulseIR(560);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1660);
+	pulseIR(560);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(1640);
+	pulseIR(560);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(560);
+	delayMicroseconds(1640);
+	pulseIR(560);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(560);
+	delayMicroseconds(1660);
+	pulseIR(520);
+	delayMicroseconds(41140);
+	pulseIR(8840);
+	delayMicroseconds(2180);
+	pulseIR(560);
+	delayMicroseconds(28704);
+	pulseIR(8840);
+	delayMicroseconds(2180);
+    digitalWrite(statusLedPin, LOW);
+}
+
+void sendHKDiscreteVid1() {
+    digitalWrite(statusLedPin, HIGH);
+	pulseIR(120);
+	delayMicroseconds(54928);
+	pulseIR(8840);
+	delayMicroseconds(4420);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1700);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(560);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(38960);
+	pulseIR(8820);
+	delayMicroseconds(2200);
+	pulseIR(540);
+	delayMicroseconds(28724);
+	pulseIR(8840);
+	delayMicroseconds(2200);
+	pulseIR(520);
+	delayMicroseconds(25216);
+	pulseIR(8840);
+	delayMicroseconds(4420);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(1660);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(600);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(540);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(540);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(580);
+	pulseIR(520);
+	delayMicroseconds(1680);
+	pulseIR(520);
+	delayMicroseconds(41160);
+	pulseIR(8820);
+	delayMicroseconds(2200);
+	pulseIR(520);
+	delayMicroseconds(28724);
+	pulseIR(8840);
+	delayMicroseconds(2200);
     digitalWrite(statusLedPin, LOW);
 }
