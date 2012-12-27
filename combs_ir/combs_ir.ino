@@ -60,27 +60,29 @@ int lgTvDiscreteHDMI2[17*3] =  {1, 8918, 4472,
                                 1, 546, 28620};
 
 int lgTvDiscreteOff[21*3] = {1, 8918, 4446,
-2, 572, 546,
-1, 572, 1638,
-5, 572, 546,
-2, 572, 1638,
-1, 572, 546,
-6, 572, 1638,
-1, 572, 546,
-1, 572, 1638,
-3, 572, 546,
-2, 572, 1638,
-1, 572, 546,
-1, 572, 1638,
-1, 572, 546,
-3, 572, 1638,
-2, 572, 546,
-1, 572, 39598,
-1, 8892, 2210,
-1, 2210, 572,
-1, 8892, 2210,
-1, 2210, 572};
+                             2, 572, 546,
+                             1, 572, 1638,
+                             5, 572, 546,
+                             2, 572, 1638,
+                             1, 572, 546,
+                             6, 572, 1638,
+                             1, 572, 546,
+                             1, 572, 1638,
+                             3, 572, 546,
+                             2, 572, 1638,
+                             1, 572, 546,
+                             1, 572, 1638,
+                             1, 572, 546,
+                             3, 572, 1638,
+                             2, 572, 546,
+                             1, 572, 39598,
+                             1, 8892, 2210,
+                             1, 2210, 572,
+                             1, 8892, 2210,
+                             1, 2210, 572};
 
+
+bool debugMode = true;
 
 int IRledPin = 4;
 int statusLedPin = 12;
@@ -98,17 +100,18 @@ int mightBeOff = 0;
 int appletvOnThresh = 200;
 int appletvOffThresh = 10;
 int numOnThreshChecksNeeded = 1000;
-int numOffThreshChecksNeeded = 1000;
+int numOffThreshChecksNeeded = 5000;
 
 void setup() {                
     pinMode(IRledPin, OUTPUT);
     pinMode(statusLedPin, OUTPUT);
     pinMode(button1Pin, INPUT);
     pinMode(button2Pin, INPUT);
-    //Serial.begin(9600);
+    Serial.begin(9600);
 }
 
 void loop() {
+    //testIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int), "lgTvDiscreteOn");
     
     photocellReading = analogRead(photocellPin);
     if (appletvState == 0) {
@@ -120,31 +123,7 @@ void loop() {
         if (mightBeOn == numOnThreshChecksNeeded) {
             mightBeOn = 0;
             appletvState = 1;
-            
-            for(int i = 0; i < num_resends; i++) {
-                sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
-                delay(100);
-                sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
-                delay(100);
-                sendHKDiscreteOn();
-                delay(100);
-                sendHKDiscreteVid1();
-                delay(500);
-            }
-           
-            // wait for tv to turn on if it was off 
-            delay(10000);
-    
-            for(int i = 0; i < num_resends; i++) {
-                sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
-                delay(100);
-                sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
-                delay(100);
-                sendHKDiscreteOn();
-                delay(100);
-                sendHKDiscreteVid1();
-                delay(500);
-            }
+            sendAppleTVAllOnSequence();
         }
     }
     
@@ -158,10 +137,7 @@ void loop() {
         if (mightBeOff == numOffThreshChecksNeeded) {
             mightBeOff = 0;
             appletvState = 0;
-            for(int i = 0; i < num_resends; i++) {
-                sendIRSignal(lgTvDiscreteHDMI1, sizeof(lgTvDiscreteHDMI1)/sizeof(int));
-                delay(100);
-            }
+            sendAppleTVAllOffSequence();
         }
     }
 /*
@@ -181,9 +157,7 @@ void loop() {
 // for a certain # of microseconds. We'll use this whenever we need to send codes
 void pulseIR(long microsecs) {
     // we'll count down from the number of microseconds we are told to wait
-    
     cli();  // this turns off any background interrupts
-
     while (microsecs > 0) {
         // 38 kHz is about 13 microseconds high and 13 microseconds low
         digitalWrite(IRledPin, HIGH);  // this takes about 3 microseconds to happen
@@ -194,8 +168,14 @@ void pulseIR(long microsecs) {
         // so 26 microseconds altogether
         microsecs -= 26;
     }
-    
     sei();  // this turns them back on
+}
+
+void testIRSignal(int *arr, int size, char* name) {
+    Serial.println("Testing ");
+    Serial.println(name);
+    sendIRSignal(arr, size);
+    delay(1000);
 }
 
 void sendIRSignal(int *arr, int size) {
@@ -211,6 +191,52 @@ void sendIRSignal(int *arr, int size) {
     digitalWrite(statusLedPin, LOW);
 }
 
+void sendAppleTVAllOnSequence() {
+    if (debugMode) {
+        Serial.print("Sending Apple TV All On Sequence...");
+    }
+    for(int i = 0; i < num_resends; i++) {
+        sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
+        delay(100);
+        sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
+        delay(100);
+        sendHKDiscreteOn();
+        delay(100);
+        sendHKDiscreteVid1();
+        delay(500);
+    }
+    // wait for tv to turn on if it was off 
+    delay(10000);
+    for(int i = 0; i < num_resends; i++) {
+        sendIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int));
+        delay(100);
+        sendIRSignal(lgTvDiscreteHDMI2, sizeof(lgTvDiscreteHDMI2)/sizeof(int));
+        delay(100);
+        sendHKDiscreteOn();
+        delay(100);
+        sendHKDiscreteVid1();
+        delay(500);
+    }
+    if (debugMode) {
+        Serial.println("Done");
+    }
+}
+
+void sendAppleTVAllOffSequence() {
+    if (debugMode) {
+        Serial.print("Sending Apple TV All Off Sequence...");
+    }
+    for(int i = 0; i < num_resends; i++) {
+        sendIRSignal(lgTvDiscreteHDMI1, sizeof(lgTvDiscreteHDMI1)/sizeof(int));
+        delay(100);
+    }
+    if (debugMode) {
+        Serial.println("Done");
+    }
+}
+
+// Below are codes which were grabbed from IR Sensor
+// TODO make the grabber ouput in more compressed standard format as above
 void sendHKDiscreteOn() {
     digitalWrite(statusLedPin, HIGH);
     pulseIR(8820);
