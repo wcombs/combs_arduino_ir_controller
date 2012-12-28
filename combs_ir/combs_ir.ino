@@ -86,8 +86,6 @@ bool debugMode = true;
 
 int IRledPin = 4;
 int statusLedPin = 12;
-int button1Pin = 8;
-int button2Pin = 13;
 int num_resends = 4;
 
 int photocellPin = 0;
@@ -102,18 +100,29 @@ int appletvOffThresh = 10;
 int numOnThreshChecksNeeded = 1000;
 int numOffThreshChecksNeeded = 5000;
 
+// button stuff
+const int blackButtonPin = 8;
+const int redButtonPin = 13;
+
+int blackButtonState = 0;
+int redButtonState = 0;
+
 void setup() {                
     pinMode(IRledPin, OUTPUT);
     pinMode(statusLedPin, OUTPUT);
-    pinMode(button1Pin, INPUT);
-    pinMode(button2Pin, INPUT);
+    pinMode(blackButtonPin, INPUT);
+    pinMode(redButtonPin, INPUT);
     Serial.begin(9600);
 }
 
 void loop() {
     //testIRSignal(lgTvDiscreteOn, sizeof(lgTvDiscreteOn)/sizeof(int), "lgTvDiscreteOn");
-    
+
+    // poll stuff    
     photocellReading = analogRead(photocellPin);
+    redButtonState = digitalRead(redButtonPin);
+    blackButtonState = digitalRead(blackButtonPin);
+
     if (appletvState == 0) {
         if (photocellReading > appletvOnThresh) {
             mightBeOn++;
@@ -133,24 +142,18 @@ void loop() {
         } else if (mightBeOff > 0) {
             mightBeOff--;
         }
-        //Serial.println(photocellReading);
         if (mightBeOff == numOffThreshChecksNeeded) {
             mightBeOff = 0;
             appletvState = 0;
             sendAppleTVAllOffSequence();
         }
     }
-/*
-  if (digitalRead(button2Pin)) {
-    for(int i = 0; i < num_resends; i++) {
-        sendIRSignal(lgTvDiscreteOff, sizeof(lgTvDiscreteOff)/sizeof(int));
-        delay(100);
-        sendHKDiscreteOff();
-        delay(200);
+  
+    if (blackButtonState == HIGH) {
+        sendAppleTVAllOffSequence();
+    } else if (redButtonState == HIGH) {
+        sendAppleTVAllOnSequence();
     }
-  }
-  */
-    
 }
 
 // This procedure sends a 38KHz pulse to the IRledPin 
@@ -164,7 +167,6 @@ void pulseIR(long microsecs) {
         delayMicroseconds(10);         // hang out for 10 microseconds
         digitalWrite(IRledPin, LOW);   // this also takes about 3 microseconds
         delayMicroseconds(10);         // hang out for 10 microseconds
-        
         // so 26 microseconds altogether
         microsecs -= 26;
     }
